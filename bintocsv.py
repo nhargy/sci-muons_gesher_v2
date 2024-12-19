@@ -90,10 +90,10 @@ def prtsv(string, on=False):
 # =========================================================
 def read_8bit_digital_data(buffer_size, x_origin, x_increment, label, segment_index):
     if segment_index == 0:
-        csv_output_file = re.sub(r"\.bin", "-%s.csv" % label, sys.argv[1])
+        csv_output_file = re.sub(r"\.bin", "-ch%s.csv" % label, sys.argv[1])
         csv_output_file = split_to_loc(csv_output_file)
     else:
-        csv_output_file = re.sub(r"\.bin", "-seg-%d-%s.csv" % (segment_index, label), sys.argv[1])
+        csv_output_file = re.sub(r"\.bin", "-seg%d-ch%s.csv" % (segment_index, label), sys.argv[1])
         csv_output_file = split_to_loc(csv_output_file)
     csv = open(csv_output_file, "w")
 
@@ -122,10 +122,10 @@ def read_8bit_digital_data(buffer_size, x_origin, x_increment, label, segment_in
 # =========================================================
 def read_32bit_float_data(buffer_size, bytes_per_point, x_origin, x_increment, label, segment_index):
     if segment_index == 0:
-        csv_output_file = re.sub(r"\.bin", "-%s.csv" % label, sys.argv[1])
+        csv_output_file = re.sub(r"\.bin", "-ch%s.csv" % label, sys.argv[1])
         csv_output_file = split_to_loc(csv_output_file)
     else:
-        csv_output_file = re.sub(r"\.bin", "-seg-%d-%s.csv" % (segment_index, label), sys.argv[1])
+        csv_output_file = re.sub(r"\.bin", "-seg%d-ch%s.csv" % (segment_index, label), sys.argv[1])
         csv_output_file = split_to_loc(csv_output_file)
     csv = open(csv_output_file, "w")
 
