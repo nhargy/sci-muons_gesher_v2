@@ -1,0 +1,13 @@
+# What to exclude:
+
+/sci-venv
+
+/lcd
+/out
+/plt
+
+/src/models/__pycache__
+/src/utils/__pycache__
+/src/scripts/__pycache__
+
+__pycache__
