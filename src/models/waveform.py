@@ -3,6 +3,7 @@ import csv
 import numpy as np
 from scipy.optimize import curve_fit
 from scipy.ndimage import gaussian_filter1d
+from scipy.signal import find_peaks
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -35,7 +36,7 @@ class WaveForm:
         self.processed_data     = None
         self.baseline           = None
         self.main_peak_idx      = None
-        self.risetime_idx       = None
+        self.ingress_idx        = None
 
 
     """ ================== """
@@ -149,7 +150,32 @@ class WaveForm:
         self.processed_data = smoothed_data
 
 
-    def detect_main_peak():
+    def detect_main_peak(self, ROI, height, width=6, distance=10, prominence=12):
+        """
+        <Description>
+
+        Args:
+            ROI (tuple[int,int]) : integer value of the left-most and right-most INDEX of the
+                                   Region Of Interest.
+
+        Returns:
+        """
+        a = int(ROI[0]); b = int(ROI[1])
+        _,y = self.get_data(zipped=False)
+        wf_cut = y[a:b]
+
+        # Find peaks
+        peaks, _ = find_peaks(wf_cut, height=height, width=width, distance=distance, prominence=prominence) 
+
+        try:
+            # Extract index of first peak
+            peak_idx = a + peaks[0]
+            self.main_peak_idx = peak_idx
+        except:
+            pass
+
+
+    def identify_ingress(self, threshold, peak_idx, peak_val):
         """
         <Description>
 
@@ -157,18 +183,15 @@ class WaveForm:
 
         Returns:
         """
-        pass
+        if peak_idx != None:
+            _, y   = self.get_data(zipped=False)
+            wf_cut = y[:peak_idx]
 
-
-    def identify_main_ingress():
-        """
-        <Description>
-
-        Args:
-
-        Returns:
-        """
-        pass
+            ingress_idx = np.argwhere(wf_cut >= threshold)[0][0]
+            self.ingress_idx = ingress_idx
+        else:
+            pass
+        
 
 
     """ =========== """
@@ -196,7 +219,7 @@ class WaveForm:
                 x,y = zip(*self.processed_data)
             else:
                 x,y = zip(*self.raw_data)
-            return x,y
+            return np.array(x),np.array(y)
 
 
     def get_baseline(self):
@@ -208,3 +231,39 @@ class WaveForm:
         Returns:
         """
         return self.baseline
+
+
+    def get_main_peak(self):
+        """
+        <Description>
+
+        Args:
+
+        Returns:
+        """
+        peak_idx = self.main_peak_idx
+
+        if peak_idx != None:
+            x, y = self.get_data(zipped=False)
+            peak_val = y[peak_idx]
+
+        else:
+            peak_val = None
+
+        return peak_idx, peak_val
+
+    def get_ingress(self):
+        """
+        <Description>
+
+        Args:
+
+        Returns:
+
+        """
+        ingress_idx = self.ingress_idx
+
+        x, _ = self.get_data(zipped=False)
+        ingress_time_val = x[ingress_idx]
+
+        return ingress_idx, ingress_time_val

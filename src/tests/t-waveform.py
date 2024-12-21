@@ -35,13 +35,13 @@ ch = 1"""
 
 # Waveform parameters (sys.argv)
 if sys.argv[1] == '?':
-    print("<Run> <scope> <segment> <channel>")
+    print("<Run> <scope> <channel> <segment>")
     exit()
 
 run = sys.argv[1]
 scope = sys.argv[2]
-seg = sys.argv[3]
-ch = sys.argv[4]
+ch = sys.argv[3]
+seg = sys.argv[4]
 
 csvfile = os.path.join(lcd_path, f'Run{run}' ,f'scope-{scope}-seg{seg}-ch{ch}.csv')
 
@@ -53,19 +53,36 @@ wf.rescale(xfactor=1e9, yfactor=-1e3)
 bins = np.arange(-49.5, 299.5,1)
 
 wf.calculate_baseline(bins=bins)
-print(wf.get_baseline())
 
 wf.zero_baseline()
 wf.calculate_baseline(bins=bins)
-print(wf.get_baseline())
 
 wf.smooth()
+
+a = 150; b = 280; th = 25
+wf.detect_main_peak((a,b), th)
+peak_idx, peak_val = wf.get_main_peak()
+
+wf.identify_ingress(th, peak_idx, peak_val)
+ingress_idx, ingress_time_val = wf.get_ingress()
 
 x,y = wf.get_data(zipped=False)
 
 fig, ax = plt.subplots()
 
 ax.plot(x,y)
+ax.axvline(x[a], color='black')
+ax.axvline(x[b], color='black')
+ax.axvspan(x[a], x[b], color = 'lawngreen', alpha = 0.25, label = 'ROI')
+ax.axhline(th, color = 'grey', linestyle = '--', label='Ingress threshold')
+try:
+    ax.scatter(x[peak_idx], y[peak_idx], color='red',s=25, label = f'Peak: {np.round(peak_val,2)}mV', zorder=2)
+    ax.scatter(x[ingress_idx], y[ingress_idx], color='orange', s=25, label=f'Ingress: {np.round(ingress_time_val,2)}ns',zorder=2)
+except:
+    pass
+
+ax.grid('on', linestyle='--', alpha=0.5)
+ax.legend()
 
 pdf.savefig()
 plt.close()
