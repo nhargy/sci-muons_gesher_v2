@@ -60,10 +60,10 @@ wf.calculate_baseline(bins=bins)
 wf.smooth()
 
 a = 150; b = 280; th = 25
-wf.detect_main_peak((a,b), th)
+wf.detect_main_peak((a,b), 140)
 peak_idx, peak_val = wf.get_main_peak()
 
-wf.identify_ingress(th, peak_idx, peak_val)
+wf.identify_ingress(th)
 ingress_idx, ingress_time_val = wf.get_ingress()
 
 x,y = wf.get_data(zipped=False)

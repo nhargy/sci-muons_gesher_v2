@@ -38,6 +38,8 @@ class WaveForm:
         self.main_peak_idx      = None
         self.ingress_idx        = None
 
+        # Read data from csv
+        self.read_from_csv()
 
     """ ================== """
     """ Processing Methods """
@@ -62,8 +64,8 @@ class WaveForm:
                 self.processed_data = data
 
         except Exception as e:
-            print(f"Failed to read csv file {self.csvfile}")
-            print(e)
+            #print(f"Failed to read csv file {self.csvfile}")
+            pass
 
 
     def rescale(self, xfactor=1, yfactor=1):
@@ -79,7 +81,7 @@ class WaveForm:
         self.processed_data = rescaled_data
 
 
-    def calculate_baseline(self, bins, p0=[100,0,20]):
+    def calculate_baseline(self, bins = np.arange(-49.5, 299.5,1), p0=[100,0,20]):
         """
         <Description>
 
@@ -111,9 +113,10 @@ class WaveForm:
         try:
             popt, pcov = curve_fit(gaussian, bin_mids, hist, p0=p0)
         except Exception as e:
-            print("Failed to fit baseline")
-            print(e)
-        
+            #print("Failed to fit baseline")
+            #print(e)
+            pass
+
         baseline = popt[1] # the mean value of the fitted gaussian
 
         self.baseline = baseline
@@ -175,7 +178,7 @@ class WaveForm:
             pass
 
 
-    def identify_ingress(self, threshold, peak_idx, peak_val):
+    def identify_ingress(self, threshold, ROI):
         """
         <Description>
 
@@ -183,11 +186,14 @@ class WaveForm:
 
         Returns:
         """
+        a = int(ROI[0]); b = int(ROI[1])
+        peak_idx, peak_val = self.get_main_peak()
+
         if peak_idx != None:
             _, y   = self.get_data(zipped=False)
-            wf_cut = y[:peak_idx]
+            wf_cut = y[a:peak_idx]
 
-            ingress_idx = np.argwhere(wf_cut >= threshold)[0][0]
+            ingress_idx = a + np.argwhere(wf_cut >= threshold)[0][0]
             self.ingress_idx = ingress_idx
         else:
             pass
@@ -263,7 +269,10 @@ class WaveForm:
         """
         ingress_idx = self.ingress_idx
 
-        x, _ = self.get_data(zipped=False)
-        ingress_time_val = x[ingress_idx]
+        if ingress_idx != None:
+            x, _ = self.get_data(zipped=False)
+            ingress_time_val = x[ingress_idx]
 
-        return ingress_idx, ingress_time_val
+            return ingress_idx, ingress_time_val
+        else:
+            return None
