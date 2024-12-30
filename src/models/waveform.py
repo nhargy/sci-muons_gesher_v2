@@ -21,7 +21,7 @@ except Exception as e:
 
 class WaveForm:
     """
-    <Description> 
+    <Description>
     """
     def __init__(self, csvfile):
         """
@@ -40,6 +40,7 @@ class WaveForm:
 
         # Read data from csv
         self.read_from_csv()
+
 
     """ ================== """
     """ Processing Methods """
@@ -131,7 +132,7 @@ class WaveForm:
         Returns:
         """
         baseline = self.get_baseline()
-        
+
         data = self.get_data()
         baseline_corrected_data = [(x, y-baseline) for x,y in data]
 
@@ -148,7 +149,7 @@ class WaveForm:
         """
         x,y       = self.get_data(zipped=False)
         wf_smooth = gaussian_filter1d(y, sigma=sigma)
-        
+
         smoothed_data = np.array(list(zip(x, wf_smooth)))
         self.processed_data = smoothed_data
 
@@ -168,7 +169,7 @@ class WaveForm:
         wf_cut = y[a:b]
 
         # Find peaks
-        peaks, _ = find_peaks(wf_cut, height=height, width=width, distance=distance, prominence=prominence) 
+        peaks, _ = find_peaks(wf_cut, height=height, width=width, distance=distance, prominence=prominence)
 
         try:
             # Extract index of first peak
@@ -197,13 +198,11 @@ class WaveForm:
             self.ingress_idx = ingress_idx
         else:
             pass
-        
 
 
     """ =========== """
     """ Get Methods """
     """ =========== """
-
 
     def get_data(self, zipped=True, raw=False):
         """
@@ -257,6 +256,7 @@ class WaveForm:
             peak_val = None
 
         return peak_idx, peak_val
+
 
     def get_ingress(self):
         """

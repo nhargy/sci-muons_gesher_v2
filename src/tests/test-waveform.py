@@ -87,57 +87,6 @@ ax.legend()
 pdf.savefig()
 plt.close()
 
-"""
-x,y = wf.get_data(zipped=False, raw=False)
-
-bins = np.arange(-49.5, 299.5,1)
-
-
-hist, bin_edges = np.histogram(y[:int(len(y)/1)], bins=bins)
-bin_points      = bin_edges[:-1] + np.diff(bin_edges)/2
-
-indexes = []
-for idx, elm in enumerate(hist):
-    if elm == 0:
-        indexes.append(idx)
-
-# remove zeros
-hist = np.delete(hist, indexes, axis=None)
-bin_points = np.delete(bin_points, indexes, axis=None)
-
-# remove high values
-cut = int(len(hist)*1)
-hist = hist[:cut]
-bin_points = bin_points[:cut]
-
-print(bin_points, hist)
-
-try:
-    popt, pcov      = curve_fit(gaussian, bin_points, hist, p0=[100,0,10])
-except:
-    pass
-
-fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, figsize=(6,4))
-
-ax1.plot(x,y)
-ax1.set_ylim(-25,25)
-
-ax2.hist(y, bins=bins)
-ax2.scatter(bin_points, hist)
-
-try:
-    x_vals = np.linspace(-100,100,500)
-    ax2.plot(x_vals, gaussian(x_vals, *popt), label=f'BL={np.round(popt[1],2)}')
-    #ax2.set_xlim(-25,50)
-except:
-    pass
-
-ax2.legend()
-
-pdf.savefig()
-plt.close()
-"""
 
 # Close pdf
 pdf.close()
-

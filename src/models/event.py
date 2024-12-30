@@ -22,15 +22,17 @@ class Event:
     <Description>
     """
     def __init__(self, dirpath, segment):
-        self.dirpath         = dirpath
-        self.segment         = segment
-        self.ROI             = None
-        self.waveform_matrix = None
-        self.ingress_matrix  = None
-        self.timestamp       = None
-        self.delta_t_array   = None
-        self.positions       = None
-        self.linear_popt     = None
+        self.dirpath           = dirpath
+        self.segment           = segment
+        self.ROI               = None
+        self.waveform_matrix   = None
+        self.ingress_matrix    = None
+        self.timestamp         = None
+        self.delta_t_array     = None
+        self.positions         = None
+        self.linear_popt       = None
+        self.peak_threshold    = None
+        self.ingress_threshold = None
 
 
     """ ================== """
@@ -65,8 +67,8 @@ class Event:
         try:
             for i in self.waveform_matrix:
                 for wf in i:
-                    wf.detect_main_peak((self.ROI[0], self.ROI[1]), 140)
-                    wf.identify_ingress(25, (self.ROI[0], self.ROI[1]))
+                    wf.detect_main_peak((self.ROI[0], self.ROI[1]), self.peak_threshold)
+                    wf.identify_ingress(self.ingress_threshold, (self.ROI[0], self.ROI[1]))
         except Exception as e:
             pass
 
@@ -107,7 +109,7 @@ class Event:
                     ingress_arr.append(ingress_val)
                 except:
                     ingress_arr.append(np.nan)
-       
+
         ingress_matrix = [[ingress_arr[0], ingress_arr[1]],[ingress_arr[2], ingress_arr[3]],[ingress_arr[4], ingress_arr[5]],[ingress_arr[6], ingress_arr[7]]]
 
         self.ingress_matrix = ingress_matrix
@@ -124,7 +126,12 @@ class Event:
 
     """ =========== """
     """ Get Methods """
-    """ =========== """  
+    """ =========== """
+
+    def get_timestamp(self):
+        timestamp = self.timestamp
+        return timestamp
+
 
     def get_waveform_matrix(self):
         waveform_matrix = self.waveform_matrix
@@ -145,8 +152,16 @@ class Event:
     """ SET METHODS """
     """ =========== """
 
+    def set_peak_threshold(self, peak_threshold):
+        self.peak_threshold = peak_threshold
+
+
+    def set_ingress_threshold(self, ingress_threshold):
+        self.ingress_threshold = ingress_threshold
+
+
     def set_ROI(self, ROI, index=False):
-        
+
         if index == True:
             self.ROI = ROI
 
