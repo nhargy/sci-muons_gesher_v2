@@ -21,7 +21,7 @@ out_path  = os.path.join(project_path, 'out')
 plt_path  = os.path.join(project_path, 'plt')
 
 # Define path to pdf
-pdf_path      = os.path.join(out_path, 't-waveform.pdf')
+pdf_path      = os.path.join(out_path, 'test-waveform.pdf')
 
 # Initialise pdf
 pdf           = PdfPages(pdf_path)

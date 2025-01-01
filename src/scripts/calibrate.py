@@ -141,6 +141,17 @@ plt.tight_layout()
 pdf.savefig()
 plt.close()
 
+# =======================
+# SAVE LINEAR FIT TO JSON
+# =======================
+json_path = os.path.join(out_path, 'calibration.json')
+with open(json_path, 'w') as json:
+    json.write('{\n')
+    json.write(f'\"popt\": [{popt[0]}, {popt[1]}], \n')
+    json.write(f'\"pcov\": [[{pcov[0][0]}, {pcov[0][1]}], [{pcov[1][0]}, {pcov[1][1]}]] \n')
+    json.write('}')
+
+
 """ ========= """
 """ == END == """
 """ ========= """

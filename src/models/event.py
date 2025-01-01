@@ -33,6 +33,9 @@ class Event:
         self.linear_popt       = None
         self.peak_threshold    = None
         self.ingress_threshold = None
+        self.angle             = None
+        self.track_popt        = None
+        self.hit_coordinates   = None
 
 
     """ ================== """
@@ -124,6 +127,40 @@ class Event:
         self.delta_t_array = delta_t_array
 
 
+    def calculate_track(self, err=25, min_hit=0, max_hit=144):
+
+        positions, linear_popt = self.get_track_params()
+        m = linear_popt[0]
+        c = linear_popt[1]
+
+        def inverse_linear(t, m, c):
+            return (t-c)/m
+
+        delta_t_array   = self.get_delta_t_array()
+        hit_coordinates = inverse_linear(delta_t_array, m, c)
+
+        for idx, hit in enumerate(hit_coordinates):
+            if hit < min_hit:
+                hit_coordinates[idx] = min_hit
+            elif hit > max_hit:
+                hit_coordinates[idx] = max_hit
+
+        # Remove NaN values
+        valid_indices = ~np.isnan(positions) & ~np.isnan(hit_coordinates)
+        x_clean = positions[valid_indices]
+        y_clean = hit_coordinates[valid_indices]
+
+        # Fit track to linear function
+        popt, pcov = curve_fit(linear, x_clean, y_clean)
+
+        gradient = popt[0]
+        angle    = -np.arctan(gradient) * 180/np.pi
+
+        self.angle = angle
+        self.track_popt = popt
+        self.hit_coordinates = hit_coordinates
+
+
     """ =========== """
     """ Get Methods """
     """ =========== """
@@ -144,8 +181,14 @@ class Event:
 
 
     def get_delta_t_array(self):
-        delta_t_array = self.delta_t_array
+        delta_t_array = np.array(self.delta_t_array)
         return delta_t_array
+
+
+    def get_track_params(self):
+        positions   = np.array(self.positions)
+        linear_popt = self.linear_popt
+        return positions, linear_popt
 
 
     """ =========== """
@@ -179,6 +222,6 @@ class Event:
                 print("Could not find any waveform object in wavefrom_matrix.")
 
 
-    def set_track_params(positions=None, linear_popt=None):
+    def set_track_params(self, positions=None, linear_popt=None):
         self.positions   = positions
         self.linear_popt = linear_popt

@@ -21,7 +21,7 @@ out_path  = os.path.join(project_path, 'out')
 plt_path  = os.path.join(project_path, 'plt')
 
 # Define path to pdf
-pdf_path      = os.path.join(out_path, 't-event.pdf')
+pdf_path      = os.path.join(out_path, 'test-event.pdf')
 
 # Initialise pdf
 pdf           = PdfPages(pdf_path)
@@ -76,7 +76,7 @@ for plate_num, plate in enumerate(waveform_matrix):
         axs[plate_num].plot(x,y, color = 'black')
         ingress = ingress_matrix[plate_num][0]
         axs[plate_num].axvline(ingress, color='black', alpha=0.7)
-        
+
         x,y = plate[1].get_data(zipped=False)
         axs[plate_num].plot(x,y, color='darkblue', label = rf'$\Delta$t = {dt[plate_num]}')
         ingress = ingress_matrix[plate_num][1]

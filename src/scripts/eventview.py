@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.optimize import curve_fit
+import json
 
 # Add src directory to system path
 project_path = os.getcwd().split('/src')[0]
@@ -76,10 +77,28 @@ event.gather_waveforms()
 # set Region Of Interest (ROI)
 event.set_ROI((T_MIN, T_MAX))
 
+# extract calibration.json popt
+json_path = os.path.join(out_path, 'calibration.json')
+with open(json_path, 'r') as f:
+    content = json.load(f)
+    linear_popt = content["popt"]
+
+# set track parameters
+L = 43 #cm
+positions=np.array([L*0, L*1, L*2, L*3])
+event.set_track_params(positions=positions, linear_popt=linear_popt)
+
 # calculate
 event.calculate_peak_and_ingress()
 event.calculate_ingress_matrix()
 event.calculate_delta_t_array()
+
+try:
+    event.calculate_track()
+except Exception as e:
+    print(e)
+    pass
+
 
 # get data
 waveform_matrix = event.get_waveform_matrix()
@@ -156,6 +175,34 @@ fig.tight_layout()
 
 pdf.savefig()
 plt.close()
+
+try:
+    fig, ax = plt.subplots(figsize=(8,6))
+
+    angle = np.round(event.angle,1)
+    track_popt = event.track_popt
+    hit_coordinates = event.hit_coordinates
+
+    x_vals = np.linspace(-80, 180, 250)
+    ax.plot(x_vals, linear(x_vals, *track_popt))
+    for pos in positions:
+        ax.axvline(pos, color = 'black', linewidth=3)
+
+    for idx, hit in enumerate(hit_coordinates):
+        try:
+            ax.scatter(positions[idx], hit, color = 'red', zorder=2)
+        except:
+            pass
+
+    ax.set_ylim(0,144)
+    ax.set_title(angle, fontsize=20)
+
+    fig.tight_layout()
+    pdf.savefig()
+    plt.close()
+
+except:
+    pass
 
 
 """ ========= """
