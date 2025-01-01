@@ -191,6 +191,24 @@ class Event:
         return positions, linear_popt
 
 
+    def get_angle(self):
+        angle = self.angle
+        return angle
+
+
+    def get_hit_bools(self):
+        hit_bools = []
+        try:
+            for hit in self.hit_coordinates:
+                if 0 < hit < 144:
+                    hit_bools.append(True)
+                else:
+                    hit_bools.append(False)
+        except:
+            pass
+        return hit_bools
+
+
     """ =========== """
     """ SET METHODS """
     """ =========== """

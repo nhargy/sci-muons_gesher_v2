@@ -201,6 +201,8 @@ try:
     pdf.savefig()
     plt.close()
 
+    print(event.get_hit_bools())
+
 except:
     pass
 
