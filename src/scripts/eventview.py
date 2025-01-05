@@ -39,6 +39,11 @@ if sys.argv[1] == '?':
 run = int(sys.argv[1])
 seg = int(sys.argv[2])
 
+if sys.argv[3] == 'y':
+    save = True
+elif sys.argv[3] == 'n':
+    save = False
+
 # Path to Run
 run_path = os.path.join(lcd_path, f'Run{run}')
 
@@ -144,6 +149,11 @@ fig.suptitle(f"RAW -> Run{run} seg{seg}; timestamp: {np.round(timestamp,3)} sec"
 fig.tight_layout()
 
 pdf.savefig()
+
+if save == True:
+    path = os.path.join(plt_path, f"run{run}_seg{seg}__raw.png")
+    plt.savefig(path, dpi=350)
+
 plt.close()
 
 # Plot processed waveforms
@@ -174,6 +184,11 @@ fig.suptitle(f"Processed -> Run{run} seg{seg}; timestamp: {np.round(timestamp,3)
 fig.tight_layout()
 
 pdf.savefig()
+
+if save == True:
+    path = os.path.join(plt_path, f"run{run}_seg{seg}__processed.png")
+    plt.savefig(path, dpi=350)
+
 plt.close()
 
 try:
@@ -199,6 +214,11 @@ try:
 
     fig.tight_layout()
     pdf.savefig()
+
+    if save == True:
+        path = os.path.join(plt_path, f"run{run}_seg{seg}__track.png")
+        plt.savefig(path, dpi=350)
+
     plt.close()
 
     print(event.get_hit_bools())

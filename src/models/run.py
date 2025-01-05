@@ -13,6 +13,7 @@ sys.path.append(project_path)
 try:
     from src.models.event import Event
     from src.utils.functions import gaussian
+    from src.utils.functions import hist_to_scatter
 except Exception as e:
     print("Failed to import local modules:")
     print(e)
@@ -21,6 +22,13 @@ except Exception as e:
 lcd_path  = os.path.join(project_path, "lcd")
 out_path  = os.path.join(project_path, "out")
 plt_path  = os.path.join(project_path, "plt")
+
+
+# extract calibration.json popt
+json_path = os.path.join(out_path, "calibration.json")
+with open(json_path, "r") as f:
+    content = json.load(f)
+    linear_popt = content["popt"]
 
 
 class Run:
@@ -33,7 +41,7 @@ class Run:
 
         seg = 1
         for file in os.listdir(runpath):
-            print(f"Current seg: {seg}")
+            #print(f"Current seg: {seg}")
             try:
                 segment_number = int(file.split("seg")[1].split("-")[0])
                 if segment_number > seg:
@@ -44,7 +52,7 @@ class Run:
         return segment_number
 
 
-    def event_processor(self, event, PEAK_THRESH=125, INGRESS_THRESH=25, T_MIN=-50, T_MAX=75, L=43):
+    def event_processor(self, event, linear_popt = linear_popt, PEAK_THRESH=125, INGRESS_THRESH=25, T_MIN=-50, T_MAX=75, L=43):
 
         # timestamp
         event.read_timestamp()
@@ -59,12 +67,6 @@ class Run:
 
         # set Region Of Interest (ROI)
         event.set_ROI((T_MIN, T_MAX))
-
-        # extract calibration.json popt
-        json_path = os.path.join(out_path, "calibration.json")
-        with open(json_path, "r") as f:
-            content = json.load(f)
-            linear_popt = content["popt"]
 
         # set track parameters
         positions=np.array([L*0, L*1, L*2, L*3])
@@ -87,7 +89,6 @@ class Run:
         segment_number = self.check_segment_number(runpath)
         for segment in range(1, segment_number+1):
             try:
-                print(segment)
                 event = Event(runpath, segment)
                 self.event_processor(event)
 
@@ -135,6 +136,8 @@ if __name__ == "__main__":
 
     #run_num = sys.argv[1]
 
+    #runs = [0]
+    #runs = [1,2]
     #runs = [1,2,3,4,5,6,7,8,9,10]
     #runs = [11,12]
     runs = [13,14,15,16]
@@ -146,14 +149,36 @@ if __name__ == "__main__":
 
     data = run.get_data()
 
-    angle_vals = np.array([tup[1] for tup in data])
+    angle_vals = np.array([tup[1] for tup in data if np.sum(tup[2])==2])
+    angle_vals_3 = np.array([tup[1] for tup in data if np.sum(tup[2])==3])
+    angle_vals_4 = np.array([tup[1] for tup in data if np.sum(tup[2])==4])
+    timestamps = np.array([tup[0] for tup in data])
 
     # Remove NaN values
     valid_indices = ~np.isnan(angle_vals)
+    valid_indices_3 = ~np.isnan(angle_vals_3)
+    valid_indices_4 = ~np.isnan(angle_vals_4)
+
     angle_vals_clean = angle_vals[valid_indices]
-    fig, ax = plt.subplots()
+    angle_vals_clean_3 = angle_vals_3[valid_indices_3]
+    angle_vals_clean_4 = angle_vals_4[valid_indices_4]
+
+    valid_indices = ~np.isnan(timestamps)
+    timestamps_clean = timestamps[valid_indices]
+    timestamps_diff = np.diff(np.array(timestamps_clean))
+
+    bins = np.arange(0,60*10, 10)
+    timestamps_x, diff_y = hist_to_scatter(timestamps_diff, bins = bins)
+
+    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
     bins = np.arange(-95,95,10)
-    ax.hist(angle_vals_clean, bins = bins, edgecolor='black')
+    ax1.hist(angle_vals_clean, bins = bins, edgecolor='black')
+    ax1.hist(angle_vals_clean_3, bins = bins, edgecolor='black')
+    ax1.hist(angle_vals_clean_4, bins = bins, edgecolor='black')
+
+    #bins = 16 #np.arange(0,30,1)
+    ax2.scatter(timestamps_x, diff_y)
+
 
     pdf.savefig()
 
