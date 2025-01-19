@@ -109,7 +109,7 @@ sig_arr  = []
 fig, ax = plt.subplots(figsize=(8,5))
 bins = np.arange(-20.5,20.5,1)
 for idx, h in enumerate(hist_arr):
-    hist, bin_edges = np.histogram(h, bins=bins)
+    hist, bin_edges = np.histogram(h, bins=bins, density=True)
     bin_mids = bin_edges[:-1] + np.diff(bin_edges)/2
     popt, pcov = curve_fit(gaussian, bin_mids, hist, p0=p0s[idx])
 
@@ -118,14 +118,19 @@ for idx, h in enumerate(hist_arr):
 
     x_vals = np.linspace(-21,21,200)
     ax.plot(x_vals, gaussian(x_vals, *popt), label = labels[idx], color = colors[idx])
-    ax.hist(h, bins = bins, color = colors[idx], alpha=0.15)
+    ax.hist(h, bins = bins, color = colors[idx], alpha=0.15, density=True)
     ax.legend()
 
 ax.set_xlabel(r"$\Delta t$ [ns]")
-ax.grid("on", linestyle='--', alpha=0.25)
+ax.set_ylabel("Relative Frequency")
+ax.grid("on", linestyle='--', alpha=0.75)
 
 plt.tight_layout()
 pdf.savefig()
+
+save_path = os.path.join(plt_path, "calibrate_gaussians.png")
+plt.savefig(save_path)
+
 plt.close()
 
 popt, pcov = curve_fit(linear, x_positions, mean_arr, sigma=sig_arr, p0 = [0.1, -10])
@@ -135,10 +140,17 @@ ax.plot(x_vals, linear(x_vals, *popt), label = 'Linear Fit', color='black')
 for idx, mean in enumerate(mean_arr):
     ax.errorbar(x_positions[idx], mean, yerr=sig_arr[idx], capsize=4, fmt='o', label = labels[idx], color=colors[idx])
 
+ax.set_xlabel("x [cm]")
+ax.set_ylabel(r"$\Delta t [ns]$")
 ax.legend()
+ax.grid("on", linestyle='--', alpha=0.75)
 
 plt.tight_layout()
 pdf.savefig()
+
+save_path = os.path.join(plt_path, "calibrate_fit.png")
+plt.savefig(save_path)
+
 plt.close()
 
 # =======================

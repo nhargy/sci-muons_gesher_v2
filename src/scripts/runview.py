@@ -31,7 +31,7 @@ pdf_path      = os.path.join(out_path, 'runview.pdf')
 pdf           = PdfPages(pdf_path)
 
 # == Functions == #
-def make_run_figs(runs, time_bins, time_p0, savefig = None):
+def make_run_figs(runs, time_bins, time_p0, savefig = None, rate_array=None):
 
     #colors = ['blue', 'darkred', 'magenta']
     colors = ['#1f77b4', '#d62728', '#2ca02c']
@@ -124,29 +124,38 @@ def make_run_figs(runs, time_bins, time_p0, savefig = None):
 
     plt.close()
 
+    if rate_array != None:
+        rate = run.get_rate()
+        rate_array.append(rate)
+
+
+
 
 
 """ ========== """
 """ == BODY == """
 """ ========== """
 
+rate_array = []
+
 runs = [0]
 time_bins = np.arange(0, 0.2, 0.007)
-make_run_figs(runs, time_bins, [25, 0.05]) #, savefig = "runview_TLV0")
+make_run_figs(runs, time_bins, [25, 0.05], rate_array=rate_array) #, savefig = "runview_TLV0")
 
 runs = [1,2,3,4,5,6,7,8,9,10]
 #runs = [1]
 time_bins = np.arange(0, 0.2, 0.0075)
-make_run_figs(runs, time_bins, [25, 0.05]) #, savefig = "runview_TLV1")
+make_run_figs(runs, time_bins, [25, 0.05], rate_array=rate_array) #, savefig = "runview_TLV1")
 
 runs = [11,12]
 time_bins = np.arange(0, 600, 15)
-make_run_figs(runs, time_bins, [25, 100]) #, savefig = "runview_VOS0")
+make_run_figs(runs, time_bins, [25, 100], rate_array=rate_array) #, savefig = "runview_VOS0")
 
 runs = [13,14,15,16]
 time_bins = np.arange(0, 600, 15)
-make_run_figs(runs, time_bins, [25, 100]) #, savefig = "runview_VOS1")
+make_run_figs(runs, time_bins, [25, 100], rate_array=rate_array) #, savefig = "runview_VOS1")
 
+print(rate_array)
 
 """ ========= """
 """ == END == """
