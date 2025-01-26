@@ -14,7 +14,7 @@ try:
     from src.models.event import Event
     from src.utils.functions import gaussian
     from src.utils.functions import hist_to_scatter
-except Exception as e:
+except ImportError as e:
     print("Failed to import local modules:")
     print(e)
 
@@ -36,6 +36,8 @@ class Run:
     def __init__(self):
         self.data  = []
         self.rates = []
+        self.total_time = 0
+        self.event_num = 0
 
 
     def check_segment_number(self, runpath):
@@ -131,11 +133,15 @@ class Run:
 
     def add_run(self, runpath):
 
-        segment_number = self.check_segment_number(runpath)
+        segment_number   = self.check_segment_number(runpath)
+        self.event_num  += segment_number
 
-        info_path = os.path.join(runpath, "scope-1_info.txt")
-        timestamps     = self.get_timestamps(info_path, segment_number)
-        rate = np.round(segment_number / timestamps[-1],3)
+        info_path        = os.path.join(runpath, "scope-1_info.txt")
+        timestamps       = self.get_timestamps(info_path, segment_number)
+        total_time       = timestamps[-1]
+        self.total_time += total_time
+        
+        rate           = np.round(segment_number / total_time,3)
         self.rates.append(rate)
 
         for segment in range(1, segment_number+1):
@@ -167,8 +173,9 @@ class Run:
 
 
     def get_rate(self):
-        rate = np.sum(self.rates) / len(self.rates)
-        return rate
+        rate  = self.event_num / self.total_time
+        drate = np.sqrt(self.event_num) / self.total_time 
+        return rate, drate
 
 
 # --------

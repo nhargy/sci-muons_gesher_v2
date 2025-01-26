@@ -9,6 +9,9 @@ from scipy.optimize import curve_fit
 project_path = os.getcwd().split('/src')[0]
 sys.path.append(project_path)
 
+plt.rcParams['xtick.labelsize'] = 16
+plt.rcParams['ytick.labelsize'] = 16
+
 try:
     from src.models.run import Run
     from src.utils.functions import gaussian
@@ -65,21 +68,26 @@ def make_run_figs(runs, time_bins, time_p0, savefig = None, rate_array=None):
 
     # Fitting
     popt, pcov   = curve_fit(decay, x, y, p0=time_p0)
+    #dtau         = np.round(pcov[1][1]**2,5)
+    
     popt3, pcov3 = curve_fit(decay, x3, y3, p0=time_p0)
+    #dtau3        = np.round(pcov3[1][1]**2,5)
+    
     popt4, pcov4 = curve_fit(decay, x4, y4, p0=time_p0)
+    #dtau4        = np.round(pcov4[1][1]**2,5)
 
 
-    fontsize=15
-    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize = (10,9))
+    fontsize=14
+    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize = (8,10))
 
     ax1.scatter(x,y, color = colors[0])
     ax1.scatter(x3,y3, color = colors[1], alpha = 0.4)
     ax1.scatter(x4,y4, color = colors[2], alpha = 0.4)
 
     x_vals = np.linspace(x[0], x[-1], 1000)
-    ax1.plot(x_vals, decay(x_vals, *popt), color = colors[0], label = rf'All Hits; $\tau = ${np.round(popt[1],3)}')
-    ax1.plot(x_vals*stretch, decay(x_vals*stretch, *popt3), color = colors[1], label = rf'Three Hits; $\tau = ${np.round(popt3[1],3)}')
-    ax1.plot(x_vals*stretch, decay(x_vals*stretch, *popt4), color = colors[2], label = rf'Four Hits; $\tau = ${np.round(popt4[1],3)}')
+    ax1.plot(x_vals, decay(x_vals, *popt), color = colors[0], label = rf'$\tau = ${np.round(popt[1],3)}')
+    ax1.plot(x_vals*stretch, decay(x_vals*stretch, *popt3), color = colors[1], label = rf'$\tau_3 = ${np.round(popt3[1],3)}')
+    ax1.plot(x_vals*stretch, decay(x_vals*stretch, *popt4), color = colors[2], label = rf'$\tau_4 = ${np.round(popt4[1],3)}')
 
     ax1.set_xlabel(r"$\Delta t$ [seconds]", fontsize=fontsize)
     ax1.set_ylabel("Relative Frequency", fontsize=fontsize)
@@ -101,9 +109,9 @@ def make_run_figs(runs, time_bins, time_p0, savefig = None, rate_array=None):
     std_4 = np.round(np.std(angles_4),2)
 
     bins = np.arange(-97.5,97.5+15,15)
-    ax2.hist(angles_all, bins = bins, density = False, label = rf'All Hits; $\mu = ${m_all} $\pm$ {std_all}', color = colors[0], edgecolor="black")
-    ax2.hist(angles_3, density = False, bins = bins, label = rf'Three Hits; $\mu = ${m_3} $\pm$ {std_3}', color = colors[1], alpha = 1, zorder=2, edgecolor="black")
-    ax2.hist(angles_4, density = False, bins = bins, label = rf'Four Hits; $\mu = ${m_4} $\pm$ {std_4}', color = colors[2], alpha = 1, zorder=3, edgecolor="black")
+    ax2.hist(angles_all, bins = bins, density = False, label = rf'$\theta = ${m_all} $\pm$ {std_all}', color = colors[0], edgecolor="black")
+    ax2.hist(angles_3, density = False, bins = bins, label = rf'$\theta_3 = ${m_3} $\pm$ {std_3}', color = colors[1], alpha = 1, zorder=2, edgecolor="black")
+    ax2.hist(angles_4, density = False, bins = bins, label = rf'$\theta_4 = ${m_4} $\pm$ {std_4}', color = colors[2], alpha = 1, zorder=3, edgecolor="black")
 
     ax2.set_xlabel("Incidence Angle [Degrees]", fontsize=fontsize)
     ax2.set_ylabel("Frequency", fontsize=fontsize)
@@ -122,13 +130,16 @@ def make_run_figs(runs, time_bins, time_p0, savefig = None, rate_array=None):
         save_path = os.path.join(plt_path, f"{savefig}.png")
         plt.savefig(save_path, dpi=350)
 
+    plt.show()
     plt.close()
 
     if rate_array != None:
-        rate = run.get_rate()
+        rate, drate = run.get_rate()
         rate_array.append(rate)
+        drate_array.append(drate)
 
 
+    return timestamps_all, diff, angles_all
 
 
 
@@ -137,25 +148,37 @@ def make_run_figs(runs, time_bins, time_p0, savefig = None, rate_array=None):
 """ ========== """
 
 rate_array = []
+drate_array = []
 
-runs = [0]
-time_bins = np.arange(0, 0.2, 0.007)
-make_run_figs(runs, time_bins, [25, 0.05], rate_array=rate_array) #, savefig = "runview_TLV0")
+#runs = [0]
+#time_bins = np.arange(0, 0.2, 0.007)
+#make_run_figs(runs, time_bins, [25, 0.05], rate_array=rate_array) #, savefig = "runview_TLV0")
 
-runs = [1,2,3,4,5,6,7,8,9,10]
-#runs = [1]
+runs = [0,1,2,3,4,5,6,7,8,9,10]
 time_bins = np.arange(0, 0.2, 0.0075)
-make_run_figs(runs, time_bins, [25, 0.05], rate_array=rate_array) #, savefig = "runview_TLV1")
+a1, b1, c1 = make_run_figs(runs, time_bins, [25, 0.05], rate_array=rate_array) #, savefig = "runview_TLV1")
 
 runs = [11,12]
 time_bins = np.arange(0, 600, 15)
-make_run_figs(runs, time_bins, [25, 100], rate_array=rate_array) #, savefig = "runview_VOS0")
+a2, b2, c2 = make_run_figs(runs, time_bins, [25, 100], rate_array=rate_array) #, savefig = "runview_VOS0")
 
 runs = [13,14,15,16]
 time_bins = np.arange(0, 600, 15)
-make_run_figs(runs, time_bins, [25, 100], rate_array=rate_array) #, savefig = "runview_VOS1")
+a3, b3, c3 = make_run_figs(runs, time_bins, [25, 100], rate_array=rate_array) #, savefig = "runview_VOS1")
 
-print(rate_array)
+np.save(os.path.join(out_path, "a1.npy"), a1)
+np.save(os.path.join(out_path, "a2.npy"), a2)
+np.save(os.path.join(out_path, "a3.npy"), a3)
+
+np.save(os.path.join(out_path, "b1.npy"), b1)
+np.save(os.path.join(out_path, "b2.npy"), b2)
+np.save(os.path.join(out_path, "b3.npy"), b3)
+
+np.save(os.path.join(out_path, "c1.npy"), c1)
+np.save(os.path.join(out_path, "c2.npy"), c2)
+np.save(os.path.join(out_path, "c3.npy"), c3)
+
+
 
 """ ========= """
 """ == END == """

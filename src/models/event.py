@@ -1,20 +1,38 @@
-import sys, os
+#!/usr/bin/env python3
+
+import sys
+import os
+from pathlib import Path
 import numpy as np
 from scipy.optimize import curve_fit
 import warnings
 
+# Ignore warnings
 warnings.filterwarnings("ignore")
 
 # Add src directory to system path
-project_path = os.getcwd().split('/src')[0]
-sys.path.append(project_path)
+project_path = Path.cwd().parent
+sys.path.append(str(project_path))
+
+# Import local modules
+try:
+    from src.log.central_log import logger
+    logger.debug("Imported centralised logger module.")
+except ImportError as e:
+    print("Failed to import logger.")
+    print(e)
 
 try:
     from src.models.waveform import WaveForm
+    logger.debug("Imported models.waveform module.")
+except ImportError as e:
+    logger.warning("Failed to import models.waveform module: ", e)
+
+try:
     from src.utils.functions import linear
-except Exception as e:
-    print("Failed to import local modules:")
-    print(e)
+    logger.debug("Imported utils.linear module.")
+except ImportError as e:
+    logger.warning("Failed to import utils.linear module: ", e)
 
 
 class Event:
@@ -72,7 +90,7 @@ class Event:
                 for wf in i:
                     wf.detect_main_peak((self.ROI[0], self.ROI[1]), self.peak_threshold)
                     wf.identify_ingress(self.ingress_threshold, (self.ROI[0], self.ROI[1]))
-        except Exception as e:
+        except:
             pass
 
 
@@ -125,26 +143,21 @@ class Event:
             delta_t_array.append(dt)
 
         self.delta_t_array = delta_t_array
-
-
-    def calculate_track(self, err=25, min_hit=0, max_hit=144):
-
+        
+        
+    def calculate_track(self, min_hit=0, max_hit=144):
+        
         positions, linear_popt = self.get_track_params()
-        m = linear_popt[0]
-        c = linear_popt[1]
-
-        def inverse_linear(t, m, c):
-            return (t-c)/m
-
-        delta_t_array   = self.get_delta_t_array()
-        hit_coordinates = inverse_linear(delta_t_array, m, c)
-
+        
+        delta_t_array = self.get_delta_t_array()
+        hit_coordinates = linear(delta_t_array, *linear_popt)
+        
         for idx, hit in enumerate(hit_coordinates):
             if hit < min_hit:
                 hit_coordinates[idx] = min_hit
             elif hit > max_hit:
                 hit_coordinates[idx] = max_hit
-
+        
         # Remove NaN values
         valid_indices = ~np.isnan(positions) & ~np.isnan(hit_coordinates)
         x_clean = positions[valid_indices]
@@ -154,7 +167,9 @@ class Event:
         popt, pcov = curve_fit(linear, x_clean, y_clean)
 
         gradient = popt[0]
+        delta_gradient = pcov[0][0]**2
         angle    = -np.arctan(gradient) * 180/np.pi
+        
 
         self.angle = angle
         self.track_popt = popt
@@ -237,7 +252,7 @@ class Event:
                 self.ROI = (a,b)
             except Exception as e:
                 print(e)
-                print("Could not find any waveform object in wavefrom_matrix.")
+                print(f"{self.dirpath}, {self.segment} - Could not find any waveform object in wavefrom_matrix.")
 
 
     def set_track_params(self, positions=None, linear_popt=None):

@@ -36,6 +36,10 @@ pdf           = PdfPages(pdf_path)
 PEAK_THRESH = 125
 INGRESS_THRESH = 25
 
+# Plot parameters
+LABELFONT = 14
+TITLEFONT = 16
+
 # Expected signal after zero
 T_MIN = 1
 T_MAX = 85
@@ -45,13 +49,16 @@ colors = ['purple', 'blue', 'green', 'darkorange', 'red']
 p0s    = [[25, -5, 2],[25, -2, 2],[25, 0, 2],[25, 2, 2],[25, 5, 2]]
 
 x_positions = [24, 48, 72, 96, 120]
+pos_err     = 5 #cm
+
+N = 120
 
 def collect_dts(runs):
     dts = []
     for run in runs:
         print(f'RUN {run}'); print()
         run_path = os.path.join(lcd_path, f'Run{run}')
-        for seg in range(1, 121):
+        for seg in range(1, N+1):
             try:
                 event = Event(run_path, seg)
 
@@ -91,7 +98,7 @@ def collect_dts(runs):
     mean = np.mean(dts)
     std  = np.std(dts)
     z_scores = (dts - mean)/std
-    threshold = 2
+    threshold = 3
     dts = dts[np.abs(z_scores) < threshold]
 
     return dts
@@ -104,7 +111,7 @@ R  = collect_dts([28,29,30])
 
 hist_arr = [L, CL, C, CR, R]
 mean_arr = []
-sig_arr  = []
+#sig_arr  = []
 
 fig, ax = plt.subplots(figsize=(8,5))
 bins = np.arange(-20.5,20.5,1)
@@ -114,15 +121,15 @@ for idx, h in enumerate(hist_arr):
     popt, pcov = curve_fit(gaussian, bin_mids, hist, p0=p0s[idx])
 
     mean_arr.append(popt[1])
-    sig_arr.append(np.abs(popt[2]))
+    #sig_arr.append(np.abs(popt[2])/np.sqrt(N))
 
-    x_vals = np.linspace(-21,21,200)
+    x_vals = np.linspace(-20,20,200)
     ax.plot(x_vals, gaussian(x_vals, *popt), label = labels[idx], color = colors[idx])
     ax.hist(h, bins = bins, color = colors[idx], alpha=0.15, density=True)
     ax.legend()
 
-ax.set_xlabel(r"$\Delta t$ [ns]")
-ax.set_ylabel("Relative Frequency")
+ax.set_xlabel(r"$\Delta t$ [ns]", fontsize = LABELFONT)
+ax.set_ylabel("Relative Frequency", fontsize = LABELFONT)
 ax.grid("on", linestyle='--', alpha=0.75)
 
 plt.tight_layout()
@@ -131,17 +138,21 @@ pdf.savefig()
 save_path = os.path.join(plt_path, "calibrate_gaussians.png")
 plt.savefig(save_path)
 
+plt.show()
 plt.close()
 
-popt, pcov = curve_fit(linear, x_positions, mean_arr, sigma=sig_arr, p0 = [0.1, -10])
+#popt, pcov = curve_fit(linear, x_positions, mean_arr, sigma=sig_arr, p0 = [0.1, -10])
+popt, pcov = curve_fit(linear, mean_arr, x_positions, sigma=pos_err, p0 = [0.1, -10])
 fig, ax = plt.subplots(figsize=(8,5))
-x_vals = np.linspace(0,144)
-ax.plot(x_vals, linear(x_vals, *popt), label = 'Linear Fit', color='black')
+t_vals = np.linspace(-12,12)
+ax.plot(t_vals, linear(t_vals, *popt), label = 'Linear Fit', color='black')
 for idx, mean in enumerate(mean_arr):
-    ax.errorbar(x_positions[idx], mean, yerr=sig_arr[idx], capsize=4, fmt='o', label = labels[idx], color=colors[idx])
+    ax.errorbar(mean, x_positions[idx], yerr=pos_err, capsize=4, fmt='o', label = labels[idx], color=colors[idx])
+    #ax.scatter(mean, x_positions[idx], label = labels[idx], color=colors[idx], zorder=2)
 
-ax.set_xlabel("x [cm]")
-ax.set_ylabel(r"$\Delta t [ns]$")
+ax.set_yticks([0,24,48,72,96,120,144], labels=[0,24,48,72,96,120,144])
+ax.set_ylabel("x [cm]", fontsize = LABELFONT)
+ax.set_xlabel(r"$\Delta t$ [ns]", fontsize = LABELFONT)
 ax.legend()
 ax.grid("on", linestyle='--', alpha=0.75)
 
@@ -151,7 +162,9 @@ pdf.savefig()
 save_path = os.path.join(plt_path, "calibrate_fit.png")
 plt.savefig(save_path)
 
+plt.show()
 plt.close()
+
 
 # =======================
 # SAVE LINEAR FIT TO JSON

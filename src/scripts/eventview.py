@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.optimize import curve_fit
 import json
+import logging
 
 # Add src directory to system path
 project_path = os.getcwd().split('/src')[0]
@@ -33,16 +34,17 @@ pdf           = PdfPages(pdf_path)
 """ ========== """
 
 # Take event parameters as input
-if sys.argv[1] == '?':
-    print("<Run> <Segment>")
+#if sys.argv[1] == '?':
+#    print("<Run> <Segment>")
 
-run = int(sys.argv[1])
-seg = int(sys.argv[2])
+run = 5 #int(sys.argv[1])
+seg = 78 #int(sys.argv[2])
+save = False
 
-if sys.argv[3] == 'y':
-    save = True
-elif sys.argv[3] == 'n':
-    save = False
+#if sys.argv[3] == 'y':
+#    save = True
+#elif sys.argv[3] == 'n':
+#    save = False
 
 # Path to Run
 run_path = os.path.join(lcd_path, f'Run{run}')
@@ -90,7 +92,8 @@ with open(json_path, 'r') as f:
 
 # set track parameters
 L = 43 #cm
-positions=np.array([L*0, L*1, L*2, L*3])
+H = 50 #cm, initial height
+positions=np.array([L*3+H, L*2+H, L*1+H, L*0+H])
 event.set_track_params(positions=positions, linear_popt=linear_popt)
 
 # calculate
@@ -154,6 +157,7 @@ if save == True:
     path = os.path.join(plt_path, f"run{run}_seg{seg}__raw.png")
     plt.savefig(path, dpi=350)
 
+plt.show()
 plt.close()
 
 # Plot processed waveforms
@@ -174,7 +178,10 @@ for plate_num, plate in enumerate(waveform_matrix):
 
     axs_flat[plate_num].axvspan(T_MIN, T_MAX, color='lawngreen', alpha = 0.2, label = 'ROI')
 
-    axs_flat[plate_num].set_title(rf"Plate {plate_num + 1}; $\Delta t$ = {delta_t_array[plate_num]}ns")
+    if np.isnan(delta_t_array[plate_num]) ==  False:
+        axs_flat[plate_num].set_title(rf"Plate {plate_num + 1}; $\Delta t$ = {delta_t_array[plate_num]}ns")
+    else:
+        axs_flat[plate_num].set_title(rf"Plate {plate_num + 1}; No $\Delta t$ Available")
     axs_flat[plate_num].grid("on", linestyle = '--', alpha = 0.5)
     axs_flat[plate_num].legend()
 
@@ -189,28 +196,41 @@ if save == True:
     path = os.path.join(plt_path, f"run{run}_seg{seg}__processed.png")
     plt.savefig(path, dpi=350)
 
+plt.show()
 plt.close()
 
 try:
-    fig, ax = plt.subplots(figsize=(8,6))
 
     angle = np.round(event.angle,1)
     track_popt = event.track_popt
     hit_coordinates = event.hit_coordinates
-
-    x_vals = np.linspace(-80, 180, 250)
-    ax.plot(x_vals, linear(x_vals, *track_popt))
+    
+    fig, ax = plt.subplots(figsize=(8,6))
+    
+    height_vals = np.linspace(-1000, 1000, 250)
+    ax.plot(linear(height_vals, *track_popt), height_vals, linewidth = 3, color = 'black', zorder=2)
+    
     for pos in positions:
-        ax.axvline(pos, color = 'black', linewidth=3)
+        ax.hlines(pos,xmin=0, xmax=144, color = 'darkblue', linewidth=6, zorder=2)
+        ax.hlines(pos,xmin=-3, xmax=147, color = 'brown', linewidth=10, zorder=1)
 
     for idx, hit in enumerate(hit_coordinates):
         try:
-            ax.scatter(positions[idx], hit, color = 'red', zorder=2)
+            #ax.scatter(hit, positions[idx], color = 'red', zorder=2)
+            ax.errorbar(hit, positions[idx], xerr=6, capsize=6, fmt='o', markersize = 9, color = 'darkorange', zorder=3, linewidth = 4)
         except:
+
             pass
 
-    ax.set_ylim(0,144)
-    ax.set_title(angle, fontsize=20)
+    ax.set_ylim(0,250)
+    ax.set_xlim(-30, 174)
+    
+    ax.set_xlabel("Position Along Plate [cm]", fontsize=14)
+    ax.set_ylabel("Height Above Floor [cm]", fontsize=14)
+    
+    ax.set_title(rf"Incidence Angle: {angle}$^\circ$", fontsize=18)
+    
+    ax.grid("on", linestyle = '--', alpha = 0.75)
 
     fig.tight_layout()
     pdf.savefig()
@@ -219,9 +239,8 @@ try:
         path = os.path.join(plt_path, f"run{run}_seg{seg}__track.png")
         plt.savefig(path, dpi=350)
 
+    plt.show()
     plt.close()
-
-    print(event.get_hit_bools())
 
 except:
     pass
