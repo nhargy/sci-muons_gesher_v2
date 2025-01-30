@@ -12,10 +12,10 @@ plt.rcParams['xtick.labelsize'] = 16
 plt.rcParams['ytick.labelsize'] = 16
 
 try:
-    from src.models.run import Run
+    #from src.models.run import Run
     from src.utils.functions import decay
     from src.utils.functions import hist_to_scatter
-    from src.utils.functions import remove_nans
+    from src.utils.functions import gaussian
 except Exception as e:
     print("Failed to import local modules:")
     print(e)
@@ -41,12 +41,11 @@ angles3     = np.load(os.path.join(out_path, "c3.npy"))
 
 # ======================
 
-bins = np.arange(-90 ,90+20*25,20)
+size = 20
+bins = np.arange(-90 ,90+size*32,size)
 off  = 200
 
-print(bins)
-
-fig, ax = plt.subplots(figsize=(15,5))
+fig, ax = plt.subplots(figsize=(15,8))
 
 xticks1 = np.array([-45, 0, 45])
 
@@ -55,9 +54,26 @@ xlabels = np.concatenate([xticks1, xticks1, xticks1], axis=0)
 
 ax.tick_params(axis='both', which='major', labelsize=25)
 
-ax.hist(angles1, bins=bins, density =True, edgecolor = 'black')
-ax.hist(angles2 + off, bins = bins, density =True, edgecolor = 'black', color='darkgreen')
-ax.hist(angles3 + 2*off, bins = bins, density =True, edgecolor = 'black', color='firebrick')
+hist1, _,_ = ax.hist(angles1, bins=bins, density =True, edgecolor = 'black')
+hist2, _,_ = ax.hist(angles2 + off, bins = bins, density =True, edgecolor = 'black', color='darkgreen')
+hist3, _,_ = ax.hist(angles3 + 2*off, bins = bins, density =True, edgecolor = 'black', color='firebrick')
+
+bin_mids = bins[:-1] + np.diff(bins)/2
+popt, pcov = curve_fit(gaussian, bin_mids, hist1, p0=[0.1, 0, 20])
+x_vals = np.linspace(-140,140, 250)
+ax.plot(x_vals, gaussian(x_vals, *popt), color='blue', lw = 4, alpha = 0.75)
+print(popt[1], pcov[1][1]**2)
+
+
+popt, pcov = curve_fit(gaussian, bin_mids, hist2, p0=[0.1, off, 20])
+x_vals = np.linspace(-140,140, 250) + off
+ax.plot(x_vals, gaussian(x_vals, *popt), color='limegreen', lw = 4, alpha = 0.75)
+print(popt[1] - off, pcov[1][1]**2)
+
+popt, pcov = curve_fit(gaussian, bin_mids, hist3, p0=[0.1, 2*off, 20])
+x_vals = np.linspace(-140,140, 250) + 2*off
+ax.plot(x_vals, gaussian(x_vals, *popt), color = 'red', lw = 4, alpha = 0.75)
+print(popt[1] - 2*off, pcov[1][1]**2)
 
 ax.axvline(0*off, color = 'black', linestyle = '--', lw = 3, zorder = 2)
 ax.axvline(1*off, color = 'black', linestyle = '--', lw = 3, zorder = 2)
@@ -70,12 +86,15 @@ ax.axvspan(2*off-off_2, 2*off+off_2+10, color = 'maroon', alpha = 0.1, zorder=1)
 
 ax.set_xticks(xticks, labels = xlabels)
 ax.set_yticks([])
+ax.set_ylabel("Relative Frequency [A.U.]", fontsize = 25)
 
 ax.text(-95, 0.0117, 'Sea-level', style='oblique', fontsize = 26)
 ax.text(-95 + off, 0.0117, 'JS S-N', style='oblique', fontsize = 26)
 ax.text(-95 + 2*off, 0.0117, 'JS W-E', style='oblique', fontsize = 26)
 
-ax.set_xlabel("Incidence Angle [Degrees]", fontsize = 25, labelpad = 15)
+ax.set_xlabel("Incidence Angle [Degrees]", fontsize = 25, labelpad = 10)
+
+ax.grid("on")
 
 ax.set_xlim(-100, 100+2*off)
 
@@ -136,3 +155,14 @@ ax.set_ylabel("Realtive Frequency [A.U.]", fontsize = 25, labelpad = 15)
 fig.tight_layout()
 
 plt.show()
+
+
+max1  = np.argmax(hist1)
+max2  = np.argmax(hist2)
+max3  = np.argmax(hist3)
+
+print(angles1)
+print()
+print(angles2)
+print()
+print(angles3)

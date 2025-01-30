@@ -49,7 +49,7 @@ colors = ['purple', 'blue', 'green', 'darkorange', 'red']
 p0s    = [[25, -5, 2],[25, -2, 2],[25, 0, 2],[25, 2, 2],[25, 5, 2]]
 
 x_positions = [24, 48, 72, 96, 120]
-pos_err     = 5 #cm
+pos_err     = 1 #cm
 
 N = 120
 

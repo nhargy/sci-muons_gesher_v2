@@ -7,6 +7,10 @@ def linear(x, m, c):
 def gaussian(x, A, m, s):
     return A * np.exp(-((x-m)**2)/(2*(s**2)))
 
+def cos_sq(theta):
+    radian = theta * (np.pi/180)
+    return np.cos(theta)**2
+
 
 def decay(x, A, t):
     return A * np.exp(-x/t)
