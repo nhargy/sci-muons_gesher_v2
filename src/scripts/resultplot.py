@@ -2,14 +2,16 @@ import sys, os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.ticker as ticker
 from scipy.optimize import curve_fit
+import seaborn as sns
 
 # Add src directory to system path
 project_path = os.getcwd().split('/src')[0]
 sys.path.append(project_path)
 
-plt.rcParams['xtick.labelsize'] = 16
-plt.rcParams['ytick.labelsize'] = 16
+plt.rcParams['xtick.labelsize'] = 34
+plt.rcParams['ytick.labelsize'] = 34
 
 try:
     #from src.models.run import Run
@@ -59,21 +61,7 @@ hist2, _,_ = ax.hist(angles2 + off, bins = bins, density =True, edgecolor = 'bla
 hist3, _,_ = ax.hist(angles3 + 2*off, bins = bins, density =True, edgecolor = 'black', color='firebrick')
 
 bin_mids = bins[:-1] + np.diff(bins)/2
-popt, pcov = curve_fit(gaussian, bin_mids, hist1, p0=[0.1, 0, 20])
-x_vals = np.linspace(-140,140, 250)
-ax.plot(x_vals, gaussian(x_vals, *popt), color='blue', lw = 4, alpha = 0.75)
-print(popt[1], pcov[1][1]**2)
 
-
-popt, pcov = curve_fit(gaussian, bin_mids, hist2, p0=[0.1, off, 20])
-x_vals = np.linspace(-140,140, 250) + off
-ax.plot(x_vals, gaussian(x_vals, *popt), color='limegreen', lw = 4, alpha = 0.75)
-print(popt[1] - off, pcov[1][1]**2)
-
-popt, pcov = curve_fit(gaussian, bin_mids, hist3, p0=[0.1, 2*off, 20])
-x_vals = np.linspace(-140,140, 250) + 2*off
-ax.plot(x_vals, gaussian(x_vals, *popt), color = 'red', lw = 4, alpha = 0.75)
-print(popt[1] - 2*off, pcov[1][1]**2)
 
 ax.axvline(0*off, color = 'black', linestyle = '--', lw = 3, zorder = 2)
 ax.axvline(1*off, color = 'black', linestyle = '--', lw = 3, zorder = 2)
@@ -101,6 +89,58 @@ ax.set_xlim(-100, 100+2*off)
 fig.tight_layout()
 
 plt.show()
+
+# ======================
+
+#sns.set_palette("bright")
+sns.set_palette("colorblind")
+
+size = 6
+bins = np.arange(-90 ,90+size,size)
+bin_mids = bins[:-1] + np.diff(bins)/2
+
+hist1, _,_ = ax.hist(angles1, bins = bins, density =True, edgecolor = 'black')
+hist2, _,_ = ax.hist(angles2, bins = bins, density =True, edgecolor = 'black', color='darkgreen')
+hist3, _,_ = ax.hist(angles3, bins = bins, density =True, edgecolor = 'black', color='firebrick')
+
+fig, ax = plt.subplots(figsize=(16,14))
+
+#sns.scatterplot(x=bin_mids, y=hist1, marker = '+', ax=ax, s = 550, lw=4)
+#sns.scatterplot(x=bin_mids, y=hist2, marker = '+', ax=ax, s = 550, lw=4, color='darkgreen')
+#sns.scatterplot(x=bin_mids, y=hist3, marker = '+', ax=ax, s = 550, lw=4, color='firebrick')
+
+
+sns.histplot(data=angles1, bins=bins, stat='density', kde=True, alpha = 0.17)
+sns.kdeplot(angles1, lw=4, label = "Sea-level")
+
+sns.histplot(data=angles2, bins=bins, stat='density', kde=True, alpha = 0.17)
+sns.kdeplot(angles2, lw=4, label = "JS S-N")
+
+sns.histplot(data=angles3, bins=bins, stat='density', kde=True, alpha = 0.17)
+sns.kdeplot(angles3, lw=4, label = "JS W-E")
+
+ax.axvline(0, linestyle = '--', color='black', alpha = 0.6, lw = 3)
+
+# Enable major grid
+ax.grid(True, which='major', linestyle='-', linewidth=2.5)
+
+# Enable minor grid (finer grid)
+ax.grid(True, which='minor', linestyle=':', linewidth=3)
+ax.minorticks_on()  # Turn on minor ticks
+
+ax.set_xlabel(rf"Zenith Angle $\theta$ [Degrees]", fontsize = 32, labelpad = 15)
+ax.set_ylabel(r"$Norm \left[ \frac{dN}{d\theta} \right]$", fontsize = 32, labelpad = 15)
+
+ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
+ax.ticklabel_format(style='scientific', axis='y', scilimits=(0,0))
+
+ax.set_xlim(-85,85)
+
+ax.legend(fontsize = 28)
+
+fig.tight_layout()
+plt.show()
+
 
 # ======================
 
@@ -155,14 +195,3 @@ ax.set_ylabel("Realtive Frequency [A.U.]", fontsize = 25, labelpad = 15)
 fig.tight_layout()
 
 plt.show()
-
-
-max1  = np.argmax(hist1)
-max2  = np.argmax(hist2)
-max3  = np.argmax(hist3)
-
-print(angles1)
-print()
-print(angles2)
-print()
-print(angles3)
